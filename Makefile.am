@@ -1,10 +1,10 @@
 SUBDIRS = source
 
 lib_LTLIBRARIES=libccsp_common.la
-libccsp_common_la_LDFLAGS= -shared -fPIC /var/tmp/pc-rdkb/lib/libdbus-1.a
+libccsp_common_la_LDFLAGS= -shared -fPIC $(CCSP_INSTALL_ROOT)/lib/libdbus-1.a
 libccsp_common_la_SOURCES=
 libccsp_common_la_DEPENDENCIES= \
-	/var/tmp/pc-rdkb/lib/libdbus-1.la \
+	$(CCSP_INSTALL_ROOT)/lib/libdbus-1.la \
 	source/cosa/package/bmw2/bwsp/components/BwspSiteCreator/libCcspCommonLibrary_BwspSiteCreator.la \
 	source/cosa/package/bmw2/bwsp/components/BwspPortalHost/libCcspCommonLibrary_BwspPortalHost.la \
 	source/cosa/package/bmw2/bwsp/components/BwspWebServlet/libCcspCommonLibrary_BwspWebServlet.la \

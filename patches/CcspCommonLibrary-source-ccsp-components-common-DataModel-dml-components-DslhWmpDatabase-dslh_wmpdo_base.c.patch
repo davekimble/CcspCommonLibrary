@@ -1,0 +1,22 @@
+--- ./CcspCommonLibrary/source/ccsp/components/common/DataModel/dml/components/DslhWmpDatabase/dslh_wmpdo_base.c
++++ ./CcspCommonLibrary/source/ccsp/components/common/DataModel/dml/components/DslhWmpDatabase/dslh_wmpdo_base.c	2015-04-22 14:22:31.162821009 -0600
+@@ -67,6 +67,9 @@
+ 
+ 
+ #include "dslh_wmpdo_global.h"
++#ifdef FEATURE_SUPPORT_RDKLOG
++#include "rdk_debug.h"
++#endif
+ 
+ 
+ /**********************************************************************
+@@ -460,6 +463,9 @@
+     }
+ 
+     AnscCoEnrollObjects((ANSC_HANDLE)pMyObject);
++#ifdef FEATURE_SUPPORT_RDKLOG
++rdk_logger_init("/fss/gw/lib/debug.ini");
++#endif
+ 
+     return  ANSC_STATUS_SUCCESS;
+ }

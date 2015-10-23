@@ -2558,18 +2558,13 @@ int CcspBaseIf_SendparameterValueChangeSignal (
 
     /*to support daemon redundency*/
     pthread_mutex_lock(&bus_info->info_mutex);
-    for(i = 0; i < CCSP_MESSAGE_BUS_MAX_CONNECTION; i++)
-    {
-        if(bus_info->connection[i].connected && bus_info->connection[i].conn )
+        if(bus_info->send_connection.conn )
         {
-            conn = bus_info->connection[i].conn;
-            break;
+            conn = bus_info->send_connection.conn;
         }
-
-    }
     pthread_mutex_unlock(&bus_info->info_mutex);
 
-    if(i ==  CCSP_MESSAGE_BUS_MAX_CONNECTION)
+    if(!conn)
         return CCSP_ERR_NOT_CONNECT;
 
 
@@ -2632,19 +2627,13 @@ int CcspBaseIf_SendtransferCompleteSignal (
 
     /*to support daemon redundency*/
     pthread_mutex_lock(&bus_info->info_mutex);
-    for(i = 0; i < CCSP_MESSAGE_BUS_MAX_CONNECTION; i++)
+    if(bus_info->send_connection.conn )
     {
-        if(bus_info->connection[i].connected && bus_info->connection[i].conn )
-        {
-            conn = bus_info->connection[i].conn;
-            dbus_connection_ref (conn);
-            break;
-        }
-
+        conn = bus_info->send_connection.conn;
     }
     pthread_mutex_unlock(&bus_info->info_mutex);
 
-    if(i ==  CCSP_MESSAGE_BUS_MAX_CONNECTION)
+    if(!conn)
         return CCSP_ERR_NOT_CONNECT;
 
 
@@ -2670,19 +2659,13 @@ int CcspBaseIf_SendtransferFailedSignal (
 
     /*to support daemon redundency*/
     pthread_mutex_lock(&bus_info->info_mutex);
-    for(i = 0; i < CCSP_MESSAGE_BUS_MAX_CONNECTION; i++)
+    if(bus_info->send_connection.conn )
     {
-        if(bus_info->connection[i].connected && bus_info->connection[i].conn )
-        {
-            conn = bus_info->connection[i].conn;
-            dbus_connection_ref (conn);
-            break;
-        }
-
+        conn = bus_info->send_connection.conn;
     }
     pthread_mutex_unlock(&bus_info->info_mutex);
 
-    if(i ==  CCSP_MESSAGE_BUS_MAX_CONNECTION)
+    if(!conn)
         return CCSP_ERR_NOT_CONNECT;
 
 
@@ -2713,18 +2696,13 @@ int CcspBaseIf_SenddeviceProfileChangeSignal (
 
     /*to support daemon redundency*/
     pthread_mutex_lock(&bus_info->info_mutex);
-    for(i = 0; i < CCSP_MESSAGE_BUS_MAX_CONNECTION; i++)
+    if(bus_info->send_connection.conn )
     {
-        if(bus_info->connection[i].connected && bus_info->connection[i].conn )
-        {
-            conn = bus_info->connection[i].conn;
-            break;
-        }
-
+        conn = bus_info->send_connection.conn;
     }
     pthread_mutex_unlock(&bus_info->info_mutex);
 
-    if(i ==  CCSP_MESSAGE_BUS_MAX_CONNECTION)
+    if(!conn)
         return CCSP_ERR_NOT_CONNECT;
 
 
@@ -2759,18 +2737,13 @@ int CcspBaseIf_SendcurrentSessionIDSignal (
 
     /*to support daemon redundency*/
     pthread_mutex_lock(&bus_info->info_mutex);
-    for(i = 0; i < CCSP_MESSAGE_BUS_MAX_CONNECTION; i++)
+    if(bus_info->send_connection.conn )
     {
-        if(bus_info->connection[i].connected && bus_info->connection[i].conn )
-        {
-            conn = bus_info->connection[i].conn;
-            break;
-        }
-
+        conn = bus_info->send_connection.conn;
     }
     pthread_mutex_unlock(&bus_info->info_mutex);
 
-    if(i ==  CCSP_MESSAGE_BUS_MAX_CONNECTION)
+    if(!conn)
         return CCSP_ERR_NOT_CONNECT;
 
 
@@ -2802,18 +2775,13 @@ int CcspBaseIf_SendSignal(
 
     /*to support daemon redundency*/
     pthread_mutex_lock(&bus_info->info_mutex);
-    for(i = 0; i < CCSP_MESSAGE_BUS_MAX_CONNECTION; i++)
+    if(bus_info->send_connection.conn )
     {
-        if(bus_info->connection[i].connected && bus_info->connection[i].conn )
-        {
-            conn = bus_info->connection[i].conn;
-            break;
-        }
-
+        conn = bus_info->send_connection.conn;
     }
     pthread_mutex_unlock(&bus_info->info_mutex);
 
-    if(i ==  CCSP_MESSAGE_BUS_MAX_CONNECTION)
+    if(!conn)
         return CCSP_ERR_NOT_CONNECT;
 
 
@@ -3397,23 +3365,6 @@ int PSM_Reset_UserChangeFlag
     snprintf(record_name, sizeof(record_name), "UserChanged.%s", pathName);
 
     return PSM_Del_Record(bus_handle, pSubSystemPrefix, record_name);
-}
-
-/* The function is called to register event, if the interface name and data path is NULL. Default is register the base interface*/
-int  CcspIf_Register_Event
-(
-    void* bus_handle,
-    const char* sender,
-    const char* event_name,
-    const char* dbus_path_event,
-    const char* dbus_interface_event
-)
-{
-    if(NULL == dbus_path_event && NULL == dbus_interface_event)
-        return CcspBaseIf_Register_Event(bus_handle, sender, event_name);
-   
-    CCSP_Message_Bus_Set_Event_Callback(bus_handle,CcspBaseIf_evt_callback, bus_handle); 	
-    return CCSP_Message_Bus_Register_Event(bus_handle, sender, dbus_path_event, dbus_interface_event,event_name);
 }
 
 int  CcspIf_UnRegister_Event

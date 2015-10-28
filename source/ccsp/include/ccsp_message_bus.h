@@ -150,8 +150,8 @@ typedef struct _CCSP_MESSAGE_BUS_INFO
     DBusObjectPathMessageFunction   default_sig_callback;
     void * user_data;
     int run;
-    CCSP_MESSAGE_BUS_CONNECTION listen_connection;
-    CCSP_MESSAGE_BUS_CONNECTION send_connection;
+    CCSP_MESSAGE_BUS_CONNECTION _listen_connection;
+    CCSP_MESSAGE_BUS_CONNECTION _send_connection;
     CCSP_MESSAGE_FILTER filters[CCSP_MESSAGE_BUS_MAX_FILTER];
     CCSP_MESSAGE_PATH_INFO path_array[CCSP_MESSAGE_BUS_MAX_PATH];
     pthread_mutex_t info_mutex;
@@ -258,6 +258,11 @@ int CCSP_Message_Bus_Send_Msg
     DBusMessage **result
 );
 
+int CCSP_Message_Bus_Send_Signal
+(
+    void* bus_handle,
+    DBusMessage *message
+);
 
 #define DBUS_REGISTER_PATH_TIMES 10
 

@@ -100,6 +100,11 @@ FILE* dfp = 0;
 #define TRACE_DEBUG MyTraceDebug
 // TRACE_DEBUG(("<%s:%d>: here\n", __FUNCTION__, __LINE__));
 
+void ccsp_message_debug(char* msg);
+void ccsp_message_debug(char* msg) {
+	TRACE_DEBUG(("%s\n", msg));
+}
+
 static void initDebug(char *component_id) {
 	char debug_file[256];
 	char* id = component_id;
@@ -113,7 +118,7 @@ static void initDebug(char *component_id) {
 	if ((dfp = fopen(debug_file, "w")) == NULL) {
 		return;
 	}
-	TRACE_DEBUG(("<%s:%d>: log start: $s\n", __FUNCTION__, __LINE__, component_id));
+	TRACE_DEBUG(("<%s:%d>: log start: %s\n", __FUNCTION__, __LINE__, component_id));
 }
 
 static void path_unregistered_func(DBusConnection *connection, void *user_data) {
@@ -196,7 +201,11 @@ static DBusConnection* getSendConnection(CCSP_MESSAGE_BUS_INFO *bus_info) {
 	DBusConnection* c = 0;
 	pthread_mutex_lock(&bus_info->info_mutex);
 
-	c = bus_info->send_connection.conn;
+	if(!bus_info->run) {
+		pthread_mutex_unlock(&bus_info->info_mutex);
+		return 0;
+	}
+	c = bus_info->_send_connection.conn;
 
 	if(c) {
 		if(dbus_connection_get_is_connected(c)) {
@@ -206,7 +215,8 @@ static DBusConnection* getSendConnection(CCSP_MESSAGE_BUS_INFO *bus_info) {
 		dbus_connection_unref(c);
 		c = 0;
 	}
-	c = createConnection(bus_info->send_connection.address);
+	c = createConnection(bus_info->_send_connection.address);
+	dbus_connection_ref(c);
 	pthread_mutex_unlock(&bus_info->info_mutex);
 	return c;
 }
@@ -226,7 +236,7 @@ static DBusConnection* createListenerConnection(CCSP_MESSAGE_BUS_INFO *bus_info)
 	dbus_error_init (&error);
 
 	while(bus_info->run) {
-		conn_new = createConnection(bus_info->listen_connection.address);
+		conn_new = createConnection(bus_info->_listen_connection.address);
 
 		if(bus_info->component_id && strlen(bus_info->component_id)) {
 			TRACE_DEBUG(("<%s:%d>: registering: '%s'\n", __FUNCTION__, __LINE__, bus_info->component_id));
@@ -294,7 +304,7 @@ static DBusConnection* createListenerConnection(CCSP_MESSAGE_BUS_INFO *bus_info)
 			}
 		}
 
-		if ( ! dbus_connection_add_filter (conn_new, filter_func, &bus_info->listen_connection, NULL)) {
+		if ( ! dbus_connection_add_filter (conn_new, filter_func, &bus_info->_listen_connection, NULL)) {
 			TRACE_ERROR(("<%s> Couldn't add filter!\n", __FUNCTION__));
 			dbus_error_free (&error);
 			dbus_connection_close(conn_new);
@@ -359,9 +369,9 @@ static void* CCSP_Message_Bus_Loop_Thread(void* user_data) {
 		TRACE_DEBUG(("<%s:%d>: start\n", __FUNCTION__, __LINE__));
 
 		pthread_mutex_lock(&bus_info->info_mutex);
-		if(bus_info->run && !bus_info->listen_connection.conn) {
+		if(bus_info->run && !bus_info->_listen_connection.conn) {
 			// does not return until
-			bus_info->listen_connection.conn = createListenerConnection(bus_info);
+			bus_info->_listen_connection.conn = createListenerConnection(bus_info);
 		}
 		pthread_mutex_unlock(&bus_info->info_mutex);
 
@@ -369,9 +379,9 @@ static void* CCSP_Message_Bus_Loop_Thread(void* user_data) {
 			return NULL;
 		}
 
-		while(dbus_connection_read_write_dispatch(bus_info->listen_connection.conn, 2000)) {
-			printf("<%s>: here\n", __FUNCTION__);
-			TRACE_DEBUG(("<%s:%d>: here\n", __FUNCTION__, __LINE__));
+		while(dbus_connection_read_write_dispatch(bus_info->_listen_connection.conn, 200)) {
+//			printf("<%s>: here\n", __FUNCTION__);
+//			TRACE_DEBUG(("<%s:%d>: here\n", __FUNCTION__, __LINE__));
 
 			/* We leverage this pthread to check dbus connection. */
 			curTime = time(NULL);
@@ -383,8 +393,8 @@ static void* CCSP_Message_Bus_Loop_Thread(void* user_data) {
 		}
 
 		pthread_mutex_lock(&bus_info->info_mutex);
-		dbus_connection_unref(bus_info->listen_connection.conn);
-		bus_info->listen_connection.conn = 0;
+		dbus_connection_unref(bus_info->_listen_connection.conn);
+		bus_info->_listen_connection.conn = 0;
 		pthread_mutex_unlock(&bus_info->info_mutex);
 
 		// recreate connection
@@ -534,9 +544,9 @@ static int CCSP_Message_Bus_Register_Path_Priv(
 		}
 	}
 	if(i != CCSP_MESSAGE_BUS_MAX_PATH) {
-		if(bus_info->listen_connection.conn ) {
+		if(bus_info->_listen_connection.conn ) {
 			if(dbus_connection_try_register_object_path (
-					bus_info->listen_connection.conn,
+					bus_info->_listen_connection.conn,
 					path,
 					&bus_info->path_array[i].echo_vtable,
 					(void*)user_data,
@@ -691,8 +701,6 @@ void CCSP_Msg_SleepInMilliSeconds(int milliSecond) {
 	select(0, NULL, NULL, NULL, &tm);
 }
 
-/*This is complicated.
-Because we have to handle multi-thread send/receive and connection disconnect issue, and dbus provide little help*/
 int CCSP_Message_Bus_Send_Msg (
 		void* bus_handle,
 		DBusMessage *message,
@@ -702,20 +710,18 @@ int CCSP_Message_Bus_Send_Msg (
 	CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
 	DBusConnection *conn = NULL;
 	DBusMessage *reply = NULL;
-	CCSP_MESSAGE_BUS_CB_DATA *cb_data = NULL;
 	DBusError err;
 	int ret  = CCSP_Message_Bus_ERROR;
-	int i;
 
 	*result = NULL;  // return value
 	dbus_error_init(&err);
 
-	/*to support daemon redundency*/
-	// connect to first connection on buf_info->connection[i]
 	conn = getSendConnection(bus_info);
 
-	if(!conn)
+	if(!conn) {
+		dbus_message_unref(message);
 		return CCSP_MESSAGE_BUS_CANNOT_CONNECT;
+	}
 
 	TRACE_DEBUG(("<%s:%d>: sending to: \n", __FUNCTION__, __LINE__, dbus_message_get_destination(message)));
 	reply = dbus_connection_send_with_reply_and_block (conn, message, 60000, &err);
@@ -737,8 +743,35 @@ int CCSP_Message_Bus_Send_Msg (
 	}
 
 	dbus_message_unref(message);
-	message = 0;
+	dbus_connection_unref(conn);
 
+	return ret;
+}
+
+int CCSP_Message_Bus_Send_Signal(void* bus_handle, DBusMessage *message) {
+
+	CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
+	DBusConnection *conn = NULL;
+	int ret  = CCSP_Message_Bus_ERROR;
+
+    if(!message) return CCSP_ERR_MEMORY_ALLOC_FAIL;
+
+	conn = getSendConnection(bus_info);
+
+	if(!conn) {
+		dbus_message_unref(message);
+		TRACE_ERROR(("<%s:%d>: NO Send Connection! \n", __FUNCTION__, __LINE__));
+		return CCSP_MESSAGE_BUS_CANNOT_CONNECT;
+	}
+
+	TRACE_DEBUG(("<%s:%d>: sending to: \n", __FUNCTION__, __LINE__, dbus_message_get_destination(message)));
+	if(dbus_connection_send(conn, message, 0)) {
+		ret = CCSP_Message_Bus_OK;
+	}
+	TRACE_DEBUG(("<%s:%d>: ret: %d\n", __FUNCTION__, __LINE__, ret));
+
+	dbus_message_unref(message);
+	dbus_connection_unref(conn);
 	return ret;
 }
 
@@ -787,8 +820,8 @@ int CCSP_Message_Bus_UnRegister_Event (
 
 	// unregister event
 	pthread_mutex_lock(&bus_info->info_mutex);
-	if(bus_info->listen_connection.conn ) {
-		conn = bus_info->listen_connection.conn;
+	if(bus_info->_listen_connection.conn ) {
+		conn = bus_info->_listen_connection.conn;
 		dbus_connection_ref (conn);
 		pthread_mutex_unlock(&bus_info->info_mutex);
 
@@ -856,8 +889,8 @@ int CCSP_Message_Bus_Register_Event(
 	int ret = 0;
 
 	pthread_mutex_lock(&bus_info->info_mutex);
-	if(bus_info->listen_connection.conn) {
-		conn = bus_info->listen_connection.conn;
+	if(bus_info->_listen_connection.conn) {
+		conn = bus_info->_listen_connection.conn;
 		dbus_connection_ref (conn);
 		pthread_mutex_unlock(&bus_info->info_mutex);
 
@@ -951,19 +984,20 @@ int CCSP_Message_Bus_Init (
 		TRACE_DEBUG(("<%s:%d>: address: %s\n", __FUNCTION__, __LINE__, address));
 
 		snprintf(
-				bus_info->listen_connection.address,
+				bus_info->_listen_connection.address,
 				size, "%s", address
 		);
-		bus_info->listen_connection.bus_info_ptr = (void *)bus_info;
+		bus_info->_listen_connection.bus_info_ptr = (void *)bus_info;
 		snprintf(
-				bus_info->send_connection.address,
+				bus_info->_send_connection.address,
 				size, "%s", address
 		);
-		bus_info->send_connection.bus_info_ptr = (void *)bus_info;
+		bus_info->_send_connection.bus_info_ptr = (void *)bus_info;
+		getSendConnection(bus_info);
 
 		thread_dbus_loop = 0;
 		if(component_id) {
-			bus_info->listen_connection.conn = createListenerConnection(bus_info);
+			bus_info->_listen_connection.conn = createListenerConnection(bus_info);
 			TRACE_DEBUG(("<%s:%d>: after create: address: %s\n", __FUNCTION__, __LINE__, address));
 			pthread_create (
 					&thread_dbus_loop,
@@ -1012,7 +1046,7 @@ void CCSP_Message_Bus_Exit(void *bus_handle) {
 	/* Set run to 0, and Trigger to CCSP_Message_Bus_Process_Thread to exit */
 	bus_info->run = 0;
 	pthread_mutex_lock(&bus_info->info_mutex);
-	if(bus_info->listen_connection.conn)dbus_connection_close(bus_info->listen_connection.conn);
+	if(bus_info->_listen_connection.conn)dbus_connection_close(bus_info->_listen_connection.conn);
 	pthread_mutex_unlock(&bus_info->info_mutex);
 
 	{ // join all the threads started in init
@@ -1037,13 +1071,13 @@ void CCSP_Message_Bus_Exit(void *bus_handle) {
 		 */
 	}
 
-	if(bus_info->listen_connection.conn ) {
-		//		dbus_connection_close(bus_info->listen_connection.conn);
-		dbus_connection_unref(bus_info->listen_connection.conn) ;
+	if(bus_info->_listen_connection.conn ) {
+		//		dbus_connection_close(bus_info->_listen_connection.conn);
+		dbus_connection_unref(bus_info->_listen_connection.conn) ;
 	}
-	if(bus_info->send_connection.conn ) {
-		dbus_connection_close(bus_info->send_connection.conn);
-		dbus_connection_unref(bus_info->send_connection.conn) ;
+	if(bus_info->_send_connection.conn ) {
+		dbus_connection_close(bus_info->_send_connection.conn);
+		dbus_connection_unref(bus_info->_send_connection.conn) ;
 	}
 
 	// RTian 5/3/2013    CCSP_Msg_SleepInMilliSeconds(1000);

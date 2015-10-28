@@ -2546,38 +2546,20 @@ int CcspBaseIf_SendparameterValueChangeSignal (
     int size
 )
 {
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     DBusMessage *message;
     int i;
-    DBusConnection *conn;
     DBusMessageIter array_iter;
     DBusMessageIter struct_iter;
     dbus_int32_t tmp ;
     dbus_uint32_t utmp ;
     DBusMessageIter iter;
 
-    /*to support daemon redundency*/
-    pthread_mutex_lock(&bus_info->info_mutex);
-        if(bus_info->send_connection.conn )
-        {
-            conn = bus_info->send_connection.conn;
-        }
-    pthread_mutex_unlock(&bus_info->info_mutex);
-
-    if(!conn)
-        return CCSP_ERR_NOT_CONNECT;
-
-
     message = dbus_message_new_signal (CCSP_DBUS_PATH_EVENT, CCSP_DBUS_INTERFACE_EVENT, "parameterValueChangeSignal" );
 
     if(!message)
         return CCSP_ERR_MEMORY_ALLOC_FAIL;
 
-
     dbus_message_iter_init_append (message, &iter);
-
-
-
     dbus_message_iter_open_container (&iter,
                                       DBUS_TYPE_ARRAY,
                                       "(sssisu)",
@@ -2609,10 +2591,7 @@ int CcspBaseIf_SendparameterValueChangeSignal (
     tmp = size;
     dbus_message_iter_append_basic (&iter, DBUS_TYPE_INT32, &tmp);
 
-    dbus_connection_send (conn, message, NULL);
-
-    dbus_message_unref (message);
-    return CCSP_SUCCESS;
+    return CCSP_Message_Bus_Send_Signal(bus_handle, message);
 }
 
 
@@ -2620,64 +2599,22 @@ int CcspBaseIf_SendtransferCompleteSignal (
     void* bus_handle
 )
 {
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     DBusMessage *message;
-    int i;
-    DBusConnection *conn;
-
-    /*to support daemon redundency*/
-    pthread_mutex_lock(&bus_info->info_mutex);
-    if(bus_info->send_connection.conn )
-    {
-        conn = bus_info->send_connection.conn;
-    }
-    pthread_mutex_unlock(&bus_info->info_mutex);
-
-    if(!conn)
-        return CCSP_ERR_NOT_CONNECT;
-
 
     message = dbus_message_new_signal (CCSP_DBUS_PATH_EVENT, CCSP_DBUS_INTERFACE_EVENT, "transferCompleteSignal" );
 
-    if(!message)
-        return CCSP_ERR_MEMORY_ALLOC_FAIL;
-
-    dbus_connection_send (conn, message, NULL);
-
-    dbus_message_unref (message);
-    return CCSP_SUCCESS;
+    return CCSP_Message_Bus_Send_Signal(bus_handle, message);
 }
 
 int CcspBaseIf_SendtransferFailedSignal (
     void* bus_handle
 )
 {
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     DBusMessage *message;
-    int i;
-    DBusConnection *conn;
-
-    /*to support daemon redundency*/
-    pthread_mutex_lock(&bus_info->info_mutex);
-    if(bus_info->send_connection.conn )
-    {
-        conn = bus_info->send_connection.conn;
-    }
-    pthread_mutex_unlock(&bus_info->info_mutex);
-
-    if(!conn)
-        return CCSP_ERR_NOT_CONNECT;
-
 
     message = dbus_message_new_signal (CCSP_DBUS_PATH_EVENT, CCSP_DBUS_INTERFACE_EVENT, "transferFailedSignal" );
 
-    if(!message)
-        return CCSP_ERR_MEMORY_ALLOC_FAIL;
-
-    dbus_connection_send (conn, message, NULL);
-
-    dbus_message_unref (message);
-    return CCSP_SUCCESS;
+    return CCSP_Message_Bus_Send_Signal(bus_handle, message);
 }
 
 
@@ -2688,23 +2625,8 @@ int CcspBaseIf_SenddeviceProfileChangeSignal (
     dbus_bool isAvailable
 )
 {
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     DBusMessage *message;
-    int i;
-    DBusConnection *conn;
     dbus_bool_t btmp = isAvailable;
-
-    /*to support daemon redundency*/
-    pthread_mutex_lock(&bus_info->info_mutex);
-    if(bus_info->send_connection.conn )
-    {
-        conn = bus_info->send_connection.conn;
-    }
-    pthread_mutex_unlock(&bus_info->info_mutex);
-
-    if(!conn)
-        return CCSP_ERR_NOT_CONNECT;
-
 
     message = dbus_message_new_signal (CCSP_DBUS_PATH_EVENT, CCSP_DBUS_INTERFACE_EVENT, "deviceProfileChangeSignal" );
 
@@ -2716,10 +2638,7 @@ int CcspBaseIf_SenddeviceProfileChangeSignal (
     dbus_message_append_args (message, DBUS_TYPE_STRING, &component_dbus_path, DBUS_TYPE_INVALID);
     dbus_message_append_args (message, DBUS_TYPE_BOOLEAN, &btmp, DBUS_TYPE_INVALID);
 
-    dbus_connection_send (conn, message, NULL);
-
-    dbus_message_unref (message);
-    return CCSP_SUCCESS;
+    return CCSP_Message_Bus_Send_Signal(bus_handle, message);
 }
 
 
@@ -2729,23 +2648,8 @@ int CcspBaseIf_SendcurrentSessionIDSignal (
     int sessionID
 )
 {
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     DBusMessage *message;
-    int i;
-    DBusConnection *conn;
     dbus_int32_t tmp ;
-
-    /*to support daemon redundency*/
-    pthread_mutex_lock(&bus_info->info_mutex);
-    if(bus_info->send_connection.conn )
-    {
-        conn = bus_info->send_connection.conn;
-    }
-    pthread_mutex_unlock(&bus_info->info_mutex);
-
-    if(!conn)
-        return CCSP_ERR_NOT_CONNECT;
-
 
     message = dbus_message_new_signal (CCSP_DBUS_PATH_EVENT, CCSP_DBUS_INTERFACE_EVENT, "currentSessionIDSignal" );
 
@@ -2757,10 +2661,7 @@ int CcspBaseIf_SendcurrentSessionIDSignal (
     tmp = sessionID;
     dbus_message_append_args (message, DBUS_TYPE_INT32, &tmp, DBUS_TYPE_INVALID);
 
-    dbus_connection_send (conn, message, NULL);
-
-    dbus_message_unref (message);
-    return CCSP_SUCCESS;
+    return CCSP_Message_Bus_Send_Signal(bus_handle, message);
 }
 
 int CcspBaseIf_SendSignal(
@@ -2768,33 +2669,11 @@ int CcspBaseIf_SendSignal(
     char *event
 )
 {
-    CCSP_MESSAGE_BUS_INFO *bus_info = (CCSP_MESSAGE_BUS_INFO *)bus_handle;
     DBusMessage *message;
-    int i;
-    DBusConnection *conn;
-
-    /*to support daemon redundency*/
-    pthread_mutex_lock(&bus_info->info_mutex);
-    if(bus_info->send_connection.conn )
-    {
-        conn = bus_info->send_connection.conn;
-    }
-    pthread_mutex_unlock(&bus_info->info_mutex);
-
-    if(!conn)
-        return CCSP_ERR_NOT_CONNECT;
-
 
     message = dbus_message_new_signal (CCSP_DBUS_PATH_EVENT, CCSP_DBUS_INTERFACE_EVENT, event);
 
-    if(!message)
-        return CCSP_ERR_MEMORY_ALLOC_FAIL;
-
-
-    dbus_connection_send (conn, message, NULL);
-
-    dbus_message_unref (message);
-    return CCSP_SUCCESS;
+    return CCSP_Message_Bus_Send_Signal(bus_handle, message);
 }
 
 int CcspBaseIf_SenddiagCompleteSignal(void * bus_handle)

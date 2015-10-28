@@ -216,7 +216,7 @@ static DBusConnection* getSendConnection(CCSP_MESSAGE_BUS_INFO *bus_info) {
 		c = 0;
 	}
 	c = createConnection(bus_info->_send_connection.address);
-	dbus_connection_ref(c);
+	if(c) dbus_connection_ref(c);
 	pthread_mutex_unlock(&bus_info->info_mutex);
 	return c;
 }
@@ -237,6 +237,11 @@ static DBusConnection* createListenerConnection(CCSP_MESSAGE_BUS_INFO *bus_info)
 
 	while(bus_info->run) {
 		conn_new = createConnection(bus_info->_listen_connection.address);
+		if(!conn_new) {
+			TRACE_ERROR(("<%s:%d>: !conn_new\n", __FUNCTION__, __LINE__));
+			CCSP_Msg_SleepInMilliSeconds(200);
+			continue;
+		}
 
 		if(bus_info->component_id && strlen(bus_info->component_id)) {
 			TRACE_DEBUG(("<%s:%d>: registering: '%s'\n", __FUNCTION__, __LINE__, bus_info->component_id));
@@ -335,7 +340,6 @@ static DBusConnection* createConnection(const char* address) {
 		TRACE_ERROR(("<%s> Failed to open connection to bus at %s: %s\n",
 				__FUNCTION__, address, error.message));
 		dbus_error_free (&error);
-		CCSP_Msg_SleepInMilliSeconds(200);
 		return 0;
 	}
 
@@ -723,7 +727,7 @@ int CCSP_Message_Bus_Send_Msg (
 		return CCSP_MESSAGE_BUS_CANNOT_CONNECT;
 	}
 
-	TRACE_DEBUG(("<%s:%d>: sending to: \n", __FUNCTION__, __LINE__, dbus_message_get_destination(message)));
+	TRACE_DEBUG(("<%s:%d>: sending to: %s\n", __FUNCTION__, __LINE__, dbus_message_get_destination(message)));
 	reply = dbus_connection_send_with_reply_and_block (conn, message, 60000, &err);
 	if (!reply) { // -1 is default timeout
 		fprintf(stderr, "%s! (%s)\n", err.message, err.name);
@@ -764,7 +768,7 @@ int CCSP_Message_Bus_Send_Signal(void* bus_handle, DBusMessage *message) {
 		return CCSP_MESSAGE_BUS_CANNOT_CONNECT;
 	}
 
-	TRACE_DEBUG(("<%s:%d>: sending to: \n", __FUNCTION__, __LINE__, dbus_message_get_destination(message)));
+	TRACE_DEBUG(("<%s:%d>: sending to: %s\n", __FUNCTION__, __LINE__, dbus_message_get_destination(message)));
 	if(dbus_connection_send(conn, message, 0)) {
 		ret = CCSP_Message_Bus_OK;
 	}
@@ -993,7 +997,6 @@ int CCSP_Message_Bus_Init (
 				size, "%s", address
 		);
 		bus_info->_send_connection.bus_info_ptr = (void *)bus_info;
-		getSendConnection(bus_info);
 
 		thread_dbus_loop = 0;
 		if(component_id) {

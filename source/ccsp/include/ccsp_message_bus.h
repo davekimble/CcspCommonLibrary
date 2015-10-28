@@ -56,7 +56,6 @@
 #ifndef CCSP_MESSAGE_BUS_H
 #define CCSP_MESSAGE_BUS_H
 #include <dbus/dbus.h>
-#include <dbus/dbus-mainloop.h>
 
 /*
 notes: see readme.txt
@@ -73,7 +72,7 @@ notes: see readme.txt
 #define CCSP_MESSAGE_BUS_NOT_SUPPORT    193 //remote can't support this api
 
 // resource limits
-#define CCSP_MESSAGE_BUS_MAX_CONNECTION         5
+//#define CCSP_MESSAGE_BUS_MAX_CONNECTION         5
 #define CCSP_MESSAGE_BUS_MAX_FILTER             50
 #define CCSP_MESSAGE_BUS_MAX_PATH               20
 
@@ -138,9 +137,9 @@ typedef struct _CCSP_MESSAGE_BUS_CONNECTION
 {
     DBusConnection *conn;
     char address[256];
-    int connected;
+//    int connected;
     void * bus_info_ptr;
-    DBusLoop *loop;
+//    DBusLoop *loop;
 
 } CCSP_MESSAGE_BUS_CONNECTION;
 
@@ -151,7 +150,8 @@ typedef struct _CCSP_MESSAGE_BUS_INFO
     DBusObjectPathMessageFunction   default_sig_callback;
     void * user_data;
     int run;
-    CCSP_MESSAGE_BUS_CONNECTION connection[CCSP_MESSAGE_BUS_MAX_CONNECTION];
+    CCSP_MESSAGE_BUS_CONNECTION _listen_connection;
+    CCSP_MESSAGE_BUS_CONNECTION _send_connection;
     CCSP_MESSAGE_FILTER filters[CCSP_MESSAGE_BUS_MAX_FILTER];
     CCSP_MESSAGE_PATH_INFO path_array[CCSP_MESSAGE_BUS_MAX_PATH];
     pthread_mutex_t info_mutex;
@@ -159,9 +159,8 @@ typedef struct _CCSP_MESSAGE_BUS_INFO
     CCSP_MESSAGE_BUS_MALLOC  mallocfunc ;
     CCSP_MESSAGE_BUS_FREE      freefunc ;
     
-    pthread_mutex_t msg_mutex;
-    pthread_cond_t  msg_threshold_cv;
-    CCSP_MSG_QUEUE *msg_queue;
+//    pthread_mutex_t msg_mutex;
+//    pthread_cond_t  msg_threshold_cv;
     DBusObjectPathMessageFunction thread_msg_func;
 
 } CCSP_MESSAGE_BUS_INFO;
@@ -251,17 +250,6 @@ int CCSP_Message_Bus_Register_Path2
     void * user_data
 );
 
-/*send on a connection, privite function*/
-int  CCSP_Message_Bus_Send_Str
-(
-    DBusConnection *conn,
-    char* component_id,
-    const char* path,
-    const char* interface,
-    const char* method,
-    char* request
-);
-
 int CCSP_Message_Bus_Send_Msg
 (
     void* bus_handle,
@@ -270,13 +258,10 @@ int CCSP_Message_Bus_Send_Msg
     DBusMessage **result
 );
 
-/*not recommended  for multithread high speed app, it will crash */
-int CCSP_Message_Bus_Send_Msg_Block
+int CCSP_Message_Bus_Send_Signal
 (
     void* bus_handle,
-    DBusMessage *message,
-    int timeout_seconds,
-    DBusMessage **result
+    DBusMessage *message
 );
 
 #define DBUS_REGISTER_PATH_TIMES 10

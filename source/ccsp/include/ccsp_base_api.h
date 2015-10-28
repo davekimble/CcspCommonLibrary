@@ -438,7 +438,7 @@ void free_parameterInfoStruct_t (void* bus_handle, int size, parameterInfoStruct
     When each component receives buscheck(), it invokes the namespace type check API in the Component
     Registrar for each of the data model parameters accessed by this component and owned by another component.
     The Component Registrar verifies that each data model parameter is registered by a component and that the
-    data model type specified in the API is the same as the data model type registered by the ¡°owner¡± component.
+    data model type specified in the API is the same as the data model type registered by the ï¿½ï¿½ownerï¿½ï¿½ component.
     The component sends TDM a response to buscheck() with all checked parameter names and PASS/FAIL for each
     parameter. If during buscheck(), it is found that there are missing or unregistered parameters,
     appropriate errors are flagged.
@@ -506,7 +506,7 @@ int CcspBaseIf_registerBase(
 
 
 //following helper functions are wrappers for CcspBaseIf_getParameterValues, have been removed from base interface
-//This API returns the internal state of the component. The state reflects the Component¡¯s internal lifecycle state
+//This API returns the internal state of the component. The state reflects the Componentï¿½ï¿½s internal lifecycle state
 int CcspBaseIf_queryStatus(
     void* bus_handle,
     const char* dst_component_id,
@@ -514,7 +514,7 @@ int CcspBaseIf_queryStatus(
     int *internalState
 );
 
-//This API returns the health of the component as ¡°Red/Bad¡±, ¡°Yellow/warning¡±, ¡°Green/good
+//This API returns the health of the component as ï¿½ï¿½Red/Badï¿½ï¿½, ï¿½ï¿½Yellow/warningï¿½ï¿½, ï¿½ï¿½Green/good
 int CcspBaseIf_healthCheck(
     void* bus_handle,
     const char* dst_component_id,
@@ -528,7 +528,7 @@ int CcspBaseIf_getAllocatedMemory(
     char* dbus_path,
     int *directAllocatedMemory);
 
-//This API returns the maximum memory requirements for the component. It is the component owner¡¯s best estimates
+//This API returns the maximum memory requirements for the component. It is the component ownerï¿½ï¿½s best estimates
 int CcspBaseIf_getMaxMemoryUsage(
     void* bus_handle,
     const char* dst_component_id,
@@ -951,15 +951,6 @@ CcspBaseIf_evt_callback (DBusConnection  *conn,
               void            *user_data
 );
                                    
-/* The function is called to register event, if the interface name and data path is NULL. Default is register the base interface*/
-int  CcspIf_Register_Event
-(
-    void* bus_handle,
-    const char* sender,
-    const char* event_name,
-    const char* dbus_path_event,
-    const char* dbus_interface_event
-);
 
 int  CcspIf_UnRegister_Event
 (

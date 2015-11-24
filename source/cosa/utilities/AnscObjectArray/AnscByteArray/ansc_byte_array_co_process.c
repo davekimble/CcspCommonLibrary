@@ -228,7 +228,7 @@ AnscByteArrayRemoveAll
     prototype:
 
         ANSC_OBJECT_ARRAY_DATA
-        AnscPtrArrayGetAt
+        AnscByteArrayGetAt
             (
                 ANSC_HANDLE                 hThisObject,
                 ULONG                       ulIndex
@@ -263,7 +263,7 @@ AnscByteArrayGetAt
 
         pStorage    = (PBYTE)pByteArray->hStorage;
 
-        return (ANSC_OBJECT_ARRAY_DATA)pStorage[ulIndex];
+        return (ANSC_OBJECT_ARRAY_DATA)(&pStorage[ulIndex]);
     }
 
     return (ANSC_OBJECT_ARRAY_DATA)NULL;
@@ -317,9 +317,10 @@ AnscByteArraySetAt
     else
     {
         PBYTE                       pStorage;
+        PBYTE                       pData = (PBYTE)Data;
 
         pStorage            = (PBYTE)pByteArray->hStorage;
-        pStorage[ulIndex]   = (BYTE)Data;
+        pStorage[ulIndex]   = (BYTE)(*pData);
     }
 }
 
@@ -396,11 +397,12 @@ AnscByteArrayInsertAt
             pStorage[i + ulCount] = pStorage[i];
         }
 
+        PBYTE pData = (PBYTE)Data;
         pByteArray->ulItemCount += ulCount;
 
         for (i = 0; i < ulCount; i ++)
         {
-            pStorage[i + ulIndex]   = (BYTE)Data;
+            pStorage[i + ulIndex]   = pData[i];
         }
     }
 }
@@ -512,9 +514,10 @@ AnscByteArrayAdd
         if (pByteArray->ulItemCount + 1 <= pByteArray->ulMaxItemCount)
         {
             PBYTE                   pStorage;
+            PBYTE                   pData = (PBYTE)Data;
 
             pStorage = (PBYTE)pByteArray->hStorage;
-            pStorage[pByteArray->ulItemCount ++] = (BYTE)Data;
+            pStorage[pByteArray->ulItemCount ++] = (BYTE)(*pData);
 
             return pByteArray->ulItemCount;
         }
@@ -650,7 +653,8 @@ AnscByteArrayFind
     LONG                            Count       = pByteArray->ulItemCount;
     LONG                            i;
     PBYTE                           pStorage    = (PBYTE)pByteArray->hStorage;
-    BYTE                            uSample     = (BYTE)Data;
+    PBYTE                           pData       = (PBYTE)Data;
+    BYTE                            uSample     = (BYTE)(*pData);
 
     for (i = 0; i < Count; i ++)
     {

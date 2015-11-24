@@ -157,7 +157,7 @@ AccessListToAccessControlBitMask
         char * pAccessList
     );
 
-void*
+ANSC_HANDLE
 MsgHelper_CreateCcdMbiIf
     (
         void*           dbusHandle,

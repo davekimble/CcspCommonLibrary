@@ -308,7 +308,7 @@ mbiIf_SendTransferFailedSignal
 }
 
 
-void*
+ANSC_HANDLE
 MsgHelper_CreateCcdMbiIf
     (
         void*                               dbusHandle,
@@ -326,7 +326,7 @@ MsgHelper_CreateCcdMbiIf
 
     if ( !pCccMbiIf )
     {
-        return ANSC_STATUS_RESOURCES;
+      return NULL;
     }
     else
     {
@@ -344,5 +344,5 @@ MsgHelper_CreateCcdMbiIf
                                             = mbiIf_SendTransferFailedSignal;
     }
 
-    return (void*)pCccMbiIf;    
+    return (ANSC_HANDLE)pCccMbiIf;    
 }

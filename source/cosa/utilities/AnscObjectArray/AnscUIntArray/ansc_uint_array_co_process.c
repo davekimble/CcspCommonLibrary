@@ -263,7 +263,7 @@ AnscUIntArrayGetAt
 
         pStorage    = (PUINT)pUIntArray->hStorage;
 
-        return (ANSC_OBJECT_ARRAY_DATA)pStorage[ulIndex];
+        return (ANSC_OBJECT_ARRAY_DATA)(&pStorage[ulIndex]);
     }
 
     return (ANSC_OBJECT_ARRAY_DATA)NULL;
@@ -317,9 +317,10 @@ AnscUIntArraySetAt
     else
     {
         PUINT                       pStorage;
+        PUINT                       pData = (PUINT)Data;
 
         pStorage            = (PUINT)pUIntArray->hStorage;
-        pStorage[ulIndex]   = (UINT)Data;
+        pStorage[ulIndex]   = (UINT)(*pData);
     }
 }
 
@@ -396,11 +397,12 @@ AnscUIntArrayInsertAt
             pStorage[i + ulCount] = pStorage[i];
         }
 
+        PUINT pData = (PUINT)Data;
         pUIntArray->ulItemCount += ulCount;
 
         for (i = 0; i < ulCount; i ++)
         {
-            pStorage[i + ulIndex]   = (UINT)Data;
+            pStorage[i + ulIndex]   = pData[i];
         }
     }
 }
@@ -512,9 +514,10 @@ AnscUIntArrayAdd
         if (pUIntArray->ulItemCount + 1 <= pUIntArray->ulMaxItemCount)
         {
             PUINT                   pStorage;
+            PUINT                   pData = (PUINT)Data;
 
             pStorage = (PUINT)pUIntArray->hStorage;
-            pStorage[pUIntArray->ulItemCount ++] = (UINT)Data;
+            pStorage[pUIntArray->ulItemCount ++] = (UINT)(*pData);
 
             return pUIntArray->ulItemCount;
         }
@@ -647,7 +650,8 @@ AnscUIntArrayFind
     LONG                            Count       = pUIntArray->ulItemCount;
     LONG                            i;
     PUINT                           pStorage    = (PUINT)pUIntArray->hStorage;
-    UINT                            uSample     = (UINT)Data;
+    PUINT                           pData       = (PUINT)Data;
+    UINT                            uSample     = (UINT)(*pData);
 
     for (i = 0; i < Count; i ++)
     {

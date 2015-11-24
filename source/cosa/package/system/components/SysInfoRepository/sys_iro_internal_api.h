@@ -340,7 +340,7 @@ SysIroIraGetRecord
         PULONG                      pulReadSize
     );
 
-ANSC_HANDLE
+ANSC_STATUS
 SysIroIraGetRecordByIndex
     (
         ANSC_HANDLE         hThisObject,

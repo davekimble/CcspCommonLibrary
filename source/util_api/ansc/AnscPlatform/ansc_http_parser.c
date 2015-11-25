@@ -9447,7 +9447,7 @@ AnscHttpGetHeaderXInfo
 
 
 
-ULONG
+ANSC_HANDLE
 AnscHttpGetHeaderCode
     (
         char*                       name
@@ -9473,7 +9473,7 @@ AnscHttpGetHeaderCode
     }
 
     AnscTrace("AnscHttpGetHeaderCode - header %s is not supported!\n", name);
-    return HTTP_HEADER_ID_RESERVED;
+    return NULL;
 }
 
 

@@ -722,7 +722,8 @@ BspTemplateObjParseText
     ulCount = pByteArray->GetSize((ANSC_HANDLE)pByteArray);
     while (ulCount != 0)
     {
-        ch = (char)pByteArray->GetAt((ANSC_HANDLE)pByteArray, ulCount - 1);
+        PBYTE ptr = pByteArray->GetAt((ANSC_HANDLE)pByteArray, ulCount - 1);
+        ch = *ptr;
         if (ch == '\t')
         {
             pByteArray->RemoveAt((ANSC_HANDLE)pByteArray, ulCount - 1, 1);

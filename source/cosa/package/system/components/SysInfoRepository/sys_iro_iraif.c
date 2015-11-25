@@ -57,6 +57,7 @@
         *   SysIroIraAddRecord2
         *   SysIroIraDelRecord
         *   SysIroIraGetRecord
+        *   SysIroIraGetRecordByIndex
         *   SysIroIraSetRecord
         *   SysIroIraQueryRecord
         *   SysIroIraGetRecordCount
@@ -2113,7 +2114,7 @@ EXIT1:
     return  returnStatus;
 }
 
-ANSC_HANDLE
+ANSC_STATUS
 SysIroIraGetRecordByIndex
     (
         ANSC_HANDLE         hThisObject,

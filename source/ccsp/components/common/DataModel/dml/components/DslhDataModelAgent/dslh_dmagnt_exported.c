@@ -720,7 +720,7 @@ COSASetParamValue
     PDSLH_WMP_DATABASE_OBJECT       pDslhWmpDatabase   = (PDSLH_WMP_DATABASE_OBJECT  )pDslhCpeController->hDslhWmpDatabase;
     PDSLH_MPR_INTERFACE             pDslhMprIf         = (PDSLH_MPR_INTERFACE        )pDslhWmpDatabase->hDslhMprIf;
 
-    return (void*)pDslhMprIf->SetParamValue(pDslhMprIf->hOwnerContext, DSLH_MPA_ENTITY_Subscriber/*DSLH_MPA_ENTITY_ACS*/, pParamName, pParamValue);
+    return (ANSC_STATUS)pDslhMprIf->SetParamValue(pDslhMprIf->hOwnerContext, DSLH_MPA_ENTITY_Subscriber/*DSLH_MPA_ENTITY_ACS*/, pParamName, pParamValue);
 }
 
 

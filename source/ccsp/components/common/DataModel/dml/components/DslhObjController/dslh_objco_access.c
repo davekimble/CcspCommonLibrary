@@ -70,6 +70,7 @@
 #include "dslh_vareo_exported_api.h"
 #include "dslh_varro_exported_api.h"
 #include "dslh_varro_interface.h"
+#include "slap_vco_internal_api.h"
 
 /**********************************************************************
 

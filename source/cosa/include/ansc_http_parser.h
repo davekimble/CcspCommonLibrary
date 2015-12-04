@@ -221,7 +221,7 @@ AnscHttpGetHeaderXInfo
         ULONG                       ulSize
     );
 
-ANSC_HANDLE
+ULONG
 AnscHttpGetHeaderCode
     (
         char*                       name

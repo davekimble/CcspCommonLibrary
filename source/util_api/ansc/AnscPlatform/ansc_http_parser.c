@@ -9466,7 +9466,7 @@ AnscHttpGetHeaderCode
 
 		if (AnscEqualString1(pXinfo->Name, name, FALSE))
 		{
-			return (ANSC_HANDLE)pXinfo->HeaderId;
+			return pXinfo->HeaderId;
 		}
 
         pEntry  = AnscSListGetNextEntry(pEntry);

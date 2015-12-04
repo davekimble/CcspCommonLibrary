@@ -79,6 +79,7 @@
 #include "openssl/dh.h"
 #include "openssl/objects.h"
 #include "openssl/rsa.h"
+#include "openssl/dsa.h"
 #endif
 
 #include "ansc_crypto_pub_ssleay_interface.h"

@@ -87,6 +87,8 @@
 
 **********************************************************************/
 
+/* explicitly add prototype to avoid problems (especially in 64-bit environment) */
+SSL *openssl_accept(int);
 ANSC_STATUS
 AnscDstoAcceptTask
     (

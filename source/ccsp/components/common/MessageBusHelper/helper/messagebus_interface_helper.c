@@ -64,7 +64,7 @@
 **********************************************************************/
 
 #include "messagebus_interface_global.h"
-
+#include "slap_vco_internal_api.h"
 
 ULONG    g_uMaxParamInResponse   = 5000/*DSLH_WMPDO_MAX_PARAM_VALUES_IN_RESPONSE*/;
 int      g_currentSessionID      = 0;

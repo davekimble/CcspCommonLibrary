@@ -86,8 +86,10 @@
 #include "http_bmo_exported_api.h"
 #include "http_bmoreq_interface.h"
 #include "http_bmoreq_exported_api.h"
+#include "http_bmoreq_internal_api.h"
 #include "http_bmorep_interface.h"
 #include "http_bmorep_exported_api.h"
+#include "http_bmorep_internal_api.h"
 
 
 #endif

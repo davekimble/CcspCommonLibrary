@@ -60,6 +60,7 @@
 
 #include "messagebus_interface_global.h"
 #include "ccc_ifo_mbi.h"
+#include "slap_vco_internal_api.h"
 
 char                     g_SubPrefix[32] = {0 };
 
